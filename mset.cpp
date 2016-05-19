@@ -1,5 +1,6 @@
 #include <QtGui>
 #include "mset.h"
+#include "complex.h"
 
 // for our timer function:
 #include <time.h>
@@ -131,12 +132,24 @@ void mandelbrotArea::render()
 	// get the dimensions of our image in terms of pixels:
 	unsigned long iwidth = image.width();
 	unsigned long iheight = image.height();
-	double unit = 1.0 / iwidth; // on a scale of 0-1, how wide is a pixel?
-	for (unsigned long i = 0; i < iwidth; i++) {
-		qc.setRgbF(i*unit,sqrt(i*unit),i*unit); // set the color we want to draw.
-		qpen.setColor(qc); // apply the color to the pen
-		qp.setPen(qpen);   // set the painter to use that pen
-		qp.drawLine(i,0,i,iheight); // draw a line of the specified color.
+	double xunit = 1.0 / iwidth; // on a scale of 0-1, how wide is a pixel?
+	double yunit = 1.0 / iheight;
+	for (unsigned long i = 0; i < iwidth; i++) { //x
+		for (unsigned long j = 0; j < iheight; j++) { //y
+			int zn = 0; //start of the sequence
+			int whenDiverge = 0; //at what iteration do we reach zn = 2?
+			complex c = complex(llCoord.real+(xunit*i), llCoord.imag+(yunit*j)); //getting the coordinate of the pixel
+			for (int iter = 0; iter < maxIterations; iter++){
+				zn = (zn*zn) + c; //the actual math thing
+				if (zn.norm() > 2){ //oops we are diverging that is bad :(
+					whenDiverge = iter; 
+					break;
+				}
+			}
+			qc.setRgbF(255-whenDiverge, whenDiverge, whenDiverge); // set the color we want to draw.
+			qpen.setColor(qc); // apply the color to the pen
+			qp.setPen(qpen);   // set the painter to use that pen
+			qp.drawPoint(i,j); // fill in point with the specified color.
 	}
 	update(); // repaint screen contents
 	return;
